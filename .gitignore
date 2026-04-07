@@ -1,0 +1,19 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+
+# IDE/runtime
+.vscode/*.log
+.idea/
+
+# Local backups and generated artifacts
+snapshots/
+
+# Training artifacts and caches
+*.pth
+*.pkl
+
+# OS
+Thumbs.db
+.DS_Store

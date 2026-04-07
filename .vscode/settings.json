@@ -1,0 +1,5 @@
+{
+    "python.defaultInterpreterPath": "C:/Users/mohit/anaconda3/envs/metalX-venv/python.exe",
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda"
+}
