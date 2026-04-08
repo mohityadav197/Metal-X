@@ -58,6 +58,18 @@ if gen:
             color="temperature",
             template="plotly_dark"
         )
+        fig.update_traces(
+            dimensions=[
+                dict(label="mg", values=results["mg"], range=[0.05, 2.55]),
+                dict(label="si", values=results["si"], range=[0.05, 2.55]),
+                dict(label="temperature", values=results["temperature"]),
+                dict(label="time", values=results["time"]),
+                dict(label="yield_strength", values=results["yield_strength"]),
+            ]
+        )
+        fig.update_layout(
+            margin=dict(l=80, r=40, t=30, b=30)
+        )
         st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("<br><hr><p style='text-align:center; color:#30363d;'>Mohit - Mid-Sem 2026</p>", unsafe_allow_html=True)
