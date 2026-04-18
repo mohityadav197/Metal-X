@@ -1,0 +1,1 @@
+"""Metallurgic-X FastAPI package."""
