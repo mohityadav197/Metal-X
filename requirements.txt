@@ -9,4 +9,13 @@ transformers
 sentencepiece
 scikit-learn
 pandas
+numpy
+matplotlib
 joblib
+psutil
+chromadb
+PyMuPDF
+python-multipart
+sentence-transformers
+langchain
+groq

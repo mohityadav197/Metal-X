@@ -3,6 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+import os
 
 import joblib
 import torch
@@ -12,8 +13,10 @@ from src.ai_core.cvae_core import MetallurgicCVAE
 from src.pinn_logic import MetallurgicalTeacher
 
 
-APP_DIR = Path(__file__).parent
-APP_MODEL_DIR = Path(__file__).parent / "models"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+APP_ROOT = os.path.abspath(os.environ.get("APP_ROOT", str(PROJECT_ROOT)))
+APP_DIR = Path(APP_ROOT) / "app"
+APP_MODEL_DIR = Path(os.path.join(APP_ROOT, "app", "models"))
 
 # Must stay synchronized with training schema order.
 FEATURE_ORDER = [
@@ -79,9 +82,9 @@ class _SynthesisEngine:
         self.teacher = MetallurgicalTeacher()
         self.model_dir = APP_MODEL_DIR
 
-        self.model_path = Path(__file__).parent / "models" / "cvae_weights.pth"
-        self.scaler_x_path = Path(__file__).parent / "models" / "scaler_X.pkl"
-        self.scaler_y_path = Path(__file__).parent / "models" / "scaler_y.pkl"
+        self.model_path = Path(os.path.join(APP_ROOT, "app", "models", "cvae_weights.pth"))
+        self.scaler_x_path = Path(os.path.join(APP_ROOT, "app", "models", "scaler_X.pkl"))
+        self.scaler_y_path = Path(os.path.join(APP_ROOT, "app", "models", "scaler_y.pkl"))
 
         self._validate_model_artifacts()
 
@@ -114,7 +117,7 @@ class _SynthesisEngine:
         feature_map["thermal_budget"] = float(feature_map["temperature"] * feature_map["time"])
         return feature_map
 
-    def synthesize(self, target_strength: float) -> dict[str, Any]:
+    def synthesize(self, target_strength: float, include_report: bool = True) -> dict[str, Any]:
         target_strength = float(target_strength)
 
         target_scaled = self.scaler_y.transform([[target_strength]])
@@ -136,7 +139,7 @@ class _SynthesisEngine:
         penalty = float(self.teacher.calculate_penalty(feature_map))
         physically_validated = bool(ratio_ok and thermal_ok and penalty < 0.4)
 
-        return {
+        result = {
             "target_strength": target_strength,
             "feature_order": FEATURE_ORDER,
             "features": [feature_map[name] for name in FEATURE_ORDER],
@@ -149,9 +152,13 @@ class _SynthesisEngine:
                 "pinn_penalty": penalty,
                 "temperature_limit_c": float(self.teacher.temp_limit),
             },
-            "report": generate_report(feature_map, target_strength, physically_validated),
             "model_directory": str(self.model_dir),
         }
+        if include_report:
+            result["report"] = generate_report(feature_map, target_strength, physically_validated)
+        else:
+            result["report"] = ""
+        return result
 
 
 @lru_cache(maxsize=1)
@@ -159,5 +166,5 @@ def _get_engine() -> _SynthesisEngine:
     return _SynthesisEngine()
 
 
-def run_synthesis_engine(target_strength: float) -> dict[str, Any]:
-    return _get_engine().synthesize(target_strength)
+def run_synthesis_engine(target_strength: float, include_report: bool = True) -> dict[str, Any]:
+    return _get_engine().synthesize(target_strength, include_report=include_report)

@@ -1,106 +1,166 @@
 from __future__ import annotations
 
+import time
+
 import streamlit as st
 
-from ui.platform import configure_page, inject_styles, post_json, render_sidebar
-
-try:
-    from streamlit_extras.switch_page_button import switch_page
-except Exception:
-    switch_page = None
+from ui.platform import (
+    BACKEND_OFFLINE_MESSAGE,
+    configure_page,
+    get_json,
+    inject_styles,
+    post_json,
+    render_sidebar,
+)
 
 
 configure_page("METALLURGIC-X | Executive Summary")
 inject_styles()
 render_sidebar("Executive Summary")
 
-BRAND_COLOR = "#9fe4ff"
+def system_monitor(timeout: float = 2.0) -> tuple[bool, dict, str | None, float]:
+    started = time.perf_counter()
+    try:
+        ok, data, err = get_json("/system/intelligence", timeout=timeout)
+        elapsed = time.perf_counter() - started
+        return ok, (data or {}), err, elapsed
+    except Exception:
+        elapsed = time.perf_counter() - started
+        return False, {}, BACKEND_OFFLINE_MESSAGE, elapsed
+
+st.markdown("<div class='hero-wrap'><h1 class='brand-title'>METALLURGIC-X</h1></div>", unsafe_allow_html=True)
+st.markdown(
+    "<p class='hero-subtext'>Traditional alloy design takes months; Metallurgic-X synthesizes aerospace-grade alloys in seconds.</p>",
+    unsafe_allow_html=True,
+)
 
 
-def render_animated_brand(text: str) -> None:
-    chars: list[str] = []
-    for idx, ch in enumerate(text):
-        delay = idx * 0.05
-        rendered = "&nbsp;" if ch == " " else ch
-        chars.append(
-            (
-                "<span class='brand-char' "
-                f"style='animation-delay:{delay:.2f}s;color:{BRAND_COLOR};text-shadow:0 0 10px rgba(159,228,255,0.45)'>"
-                f"{rendered}</span>"
-            )
-        )
+def render_live_pulse() -> tuple[bool, str | None]:
+    pulse_host = st.container()
+    warmup_host = pulse_host.empty()
+    ok_pulse, _, pulse_err, elapsed = system_monitor(timeout=2.0)
 
-    st.markdown(
+    if elapsed > 1.5:
+        warmup_host.info("Engines Warming Up... (Backend is currently loading Neural Models)")
+    else:
+        warmup_host.empty()
+
+    pulse_class = "online" if ok_pulse else "offline"
+    pulse_label = "Live Pulse Online" if ok_pulse else "Live Pulse Offline"
+    pulse_host.markdown(
         (
-            "<div class='hero-wrap'>"
-            "<h1 class='brand-title'>" + "".join(chars) + "</h1>"
+            "<div class='pulse-indicator'>"
+            f"<span class='pulse-dot {pulse_class}'></span>{pulse_label}"
             "</div>"
         ),
         unsafe_allow_html=True,
     )
+    return ok_pulse, pulse_err
 
 
-render_animated_brand("METALLURGIC-X")
-st.markdown(
-    "<p class='hero-subtext'>"
-    "A shiny, human-first AI platform that helps materials teams move from months "
-    "of trial-and-error to near-instant alloy decisions."
-    "</p>",
-    unsafe_allow_html=True,
-)
+if hasattr(st, "fragment"):
+    @st.fragment
+    def _render_pulse_fragment() -> None:
+        ok, err = render_live_pulse()
+        st.session_state["pulse_ok"] = ok
+        st.session_state["pulse_err"] = err
+
+    _render_pulse_fragment()
+else:
+    ok, err = render_live_pulse()
+    st.session_state["pulse_ok"] = ok
+    st.session_state["pulse_err"] = err
+
+st.markdown("### Impact Dashboard")
+metric_a, metric_b, metric_c = st.columns(3)
+with metric_a:
+    st.markdown(
+        """
+<div class='glass-card'>
+    <div class='impact-label'>Alloy Candidates</div>
+    <div class='impact-value blue'>500+ Alloys</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+with metric_b:
+    st.markdown(
+        """
+<div class='glass-card'>
+    <div class='impact-label'>Synthesis Speed</div>
+    <div class='impact-value cyan'>0.4 sec</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+with metric_c:
+    st.markdown(
+        """
+<div class='glass-card'>
+    <div class='impact-label'>Cycle Reduction</div>
+    <div class='impact-value green'>35% Faster</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 st.markdown(
     """
 <div class='glass-card'>
-    <h2 style='color:#2f6bff;'>The Aluminum 6xxx Crisis</h2>
+    <h3>Problem Statement</h3>
     <p>
-        Traditional alloy development often burns weeks to months in lab loops,
-        delaying critical lightweighting programs in aerospace and automotive.
-        METALLURGIC-X changes the pace by generating and validating candidate recipes
-        in about one second, enabling faster weight reduction decisions under real constraints.
+        Traditional alloy design takes months; Metallurgic-X synthesizes aerospace-grade alloys in seconds.
     </p>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
-st.markdown(
-    """
-<div class='glass-card' style='margin-top:0.9rem;'>
-    <h3 style='color:#00a8ff;'>Quick Start Impact</h3>
-    <div class='quick-start-grid'>
-        <div class='quick-stat'><b>500+ alloys</b><br/>Synthesized in a single batch session.</div>
-        <div class='quick-stat'><b>0.4 sec</b><br/>Average generation time per target strength run.</div>
-        <div class='quick-stat'><b>Up to 35%</b><br/>Faster concept-to-validation cycle in design reviews.</div>
-    </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-st.markdown("### Live Quick Start")
-col_left, col_right = st.columns([1.1, 2.0])
+st.markdown("### Quick Start")
+col_left, col_right = st.columns([1.1, 1.0])
 with col_left:
-    if st.button("Run 1-Second AI Synthesis"):
+    if st.button("Run AI Synthesis"):
         ok, data, err = post_json("/synthesize", {"target_strength": 320.0})
         if ok:
             st.success("Success! New alloy recipe created.")
             st.metric("Target Strength", f"{data.get('target_strength', 0):.1f} MPa")
             st.metric("Features Returned", len(data.get("feature_order", [])))
         else:
-            st.error(f"Synthesis could not complete: {err}")
+            st.error(BACKEND_OFFLINE_MESSAGE if err == BACKEND_OFFLINE_MESSAGE else f"Request failed: {err}")
+
+    if st.button("Refresh Live Pulse"):
+        ok, data, err = get_json("/system/intelligence", timeout=2.0)
+        if ok:
+            st.success("Backend heartbeat received.")
+            st.metric("CPU Usage", f"{float(data.get('cpu_usage', 0.0)):.1f}%")
+        else:
+            st.error(BACKEND_OFFLINE_MESSAGE)
 
 with col_right:
-    if switch_page and st.button("Open Synthesis Lab"):
-        switch_page("Synthesis_Lab")
     st.markdown(
         """
 <div class='glass-card'>
-    <b>What to do next</b><br/>
-    1) Set your target in The Synthesis Lab.<br/>
-    2) Compare chemistry vs manufacturing recommendations.<br/>
-    3) Use The Knowledge Base to get paper-backed confidence before production.
+    <b>Live Pulse</b><br/>
+    Monitoring backend telemetry from /system/intelligence.
 </div>
 """,
         unsafe_allow_html=True,
     )
+
+pulse_err = st.session_state.get("pulse_err")
+if pulse_err == BACKEND_OFFLINE_MESSAGE:
+    st.info(BACKEND_OFFLINE_MESSAGE)
+
+st.markdown(
+    """
+<div class='glass-card' style='margin-top:0.7rem;'>
+    <b>Guide</b>
+    <ul class='guide-list'>
+        <li>Set your target in Synthesis Lab.</li>
+        <li>Review feature outputs and integrity checks.</li>
+        <li>Use Research Hub for literature-backed validation.</li>
+    </ul>
+</div>
+""",
+    unsafe_allow_html=True,
+)

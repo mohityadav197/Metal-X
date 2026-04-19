@@ -9,13 +9,35 @@ from src.ai_core.inference import AlloyGenerator
 
 st.set_page_config(page_title="Metallurgic-X", layout="wide", page_icon="🧬")
 
-# --- PREMIUM CSS ---
+# Legacy UI fallback styled to match the industrial steel design language.
 st.markdown("""
     <style>
-    .stApp { background: radial-gradient(circle at top right, #0d1117, #010409); color: #e6edf3; }
-    .neon-title { color: #00d4ff; text-shadow: 0 0 15px #00d4ff; font-size: 3.5rem; font-weight: 800; text-align: center; }
-    div[data-testid="stMetric"] { background: rgba(255, 255, 255, 0.03); border-left: 5px solid #00d4ff; border-radius: 10px; padding: 20px; }
-    .stButton>button { background: linear-gradient(90deg, #00d4ff, #005f73); color: white !important; border-radius: 50px; width: 100%; font-weight: bold; height: 3em; }
+    .stApp {
+        background: linear-gradient(180deg, #eef1f4 0%, #d9dee3 100%);
+        color: #1f2933;
+    }
+    .industrial-title {
+        color: #2d3b45;
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+        letter-spacing: 0.04em;
+    }
+    div[data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.8);
+        border-left: 4px solid #5d6d79;
+        border-radius: 8px;
+        padding: 16px;
+    }
+    .stButton>button {
+        background: linear-gradient(90deg, #4b5c69, #667784);
+        color: #ffffff !important;
+        border-radius: 8px;
+        width: 100%;
+        font-weight: 600;
+        height: 2.75em;
+        border: 1px solid #42515c;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -31,13 +53,13 @@ with st.sidebar:
     target = st.slider("TARGET STRENGTH (MPa)", 150, 450, 320)
     samples = st.slider("VARIANTS", 1, 10, 5)
     st.markdown("---")
-    st.info("🟢 CVAE Engine: Online\n\n🟢 Physics Teacher: Active")
+    st.info("CVAE Engine: Online\n\nPhysics Teacher: Active")
 
-st.markdown('<p class="neon-title">METALLURGIC-X</p>', unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#8b949e;'>Inverse Design Intelligence for Al-Mg-Si Alloys</p>", unsafe_allow_html=True)
+st.markdown('<p class="industrial-title">METALLURGIC-X</p>', unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#4b5c69;'>Inverse Design Intelligence for Al-Mg-Si Alloys</p>", unsafe_allow_html=True)
 
 if gen:
-    if st.button("INITIATE NEURAL SYNTHESIS"):
+    if st.button("RUN SYNTHESIS"):
         results = gen.generate(target, num_samples=samples)
         
         # Metrics Row
@@ -48,10 +70,10 @@ if gen:
         m3.metric("AVG TEMP", f"{results['temperature'].mean():.1f}°C")
         m4.metric("AVG MG %", f"{results['mg'].mean():.2f}%")
 
-        st.subheader("🧬 Candidate Physics Report")
+        st.subheader("Candidate Physics Report")
         st.dataframe(results[['mg', 'si', 'temperature', 'time', 'yield_strength', 'status']], use_container_width=True)
         
-        st.subheader("🕸️ Inverse Design Path Analysis")
+        st.subheader("Inverse Design Path Analysis")
         fig = px.parallel_coordinates(
             results,
             dimensions=['mg', 'si', 'temperature', 'time', 'yield_strength'],
@@ -72,4 +94,4 @@ if gen:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-st.markdown("<br><hr><p style='text-align:center; color:#30363d;'>Mohit - Mid-Sem 2026</p>", unsafe_allow_html=True)
+st.markdown("<br><hr><p style='text-align:center; color:#4b5c69;'>Mohit - Mid-Sem 2026</p>", unsafe_allow_html=True)
