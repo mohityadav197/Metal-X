@@ -10,9 +10,11 @@ __pycache__/
 # Local backups and generated artifacts
 snapshots/
 
-# Training artifacts and caches
-*.pth
-*.pkl
+# Model artifacts: ignore globally, include deploy-required weights/scalers.
+**/*.pth
+**/*.pkl
+!models/*.pth
+!models/*.pkl
 
 # OS
 Thumbs.db

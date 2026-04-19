@@ -1,8 +1,23 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 
 from ui.platform import BACKEND_OFFLINE_MESSAGE, configure_page, get_json, inject_styles, render_sidebar
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MODEL_SEARCH_DIRS = [PROJECT_ROOT / "models", PROJECT_ROOT / "app" / "models"]
+REQUIRED_MODEL_ARTIFACTS = ["cvae_weights.pth", "scaler_X.pkl", "scaler_y.pkl"]
+
+
+def _missing_model_artifacts() -> list[str]:
+    missing: list[str] = []
+    for artifact in REQUIRED_MODEL_ARTIFACTS:
+        if not any((base / artifact).exists() for base in MODEL_SEARCH_DIRS):
+            missing.append(artifact)
+    return missing
 
 
 configure_page("METALLURGIC-X | Architecture Blueprint")
@@ -35,6 +50,14 @@ col_a, col_b = st.columns([1, 1.5], gap="large")
 
 with col_a:
     if st.button("Check System Pulse"):
+        missing_artifacts = _missing_model_artifacts()
+        if missing_artifacts:
+            st.error("Model Weights: Missing")
+            st.caption("Missing artifacts: " + ", ".join(missing_artifacts))
+            st.caption("Searched in: " + ", ".join(str(path) for path in MODEL_SEARCH_DIRS))
+        else:
+            st.success("Model Weights: Present")
+
         ok, data, err = get_json("/system/intelligence", timeout=2.0)
         if ok:
             st.success("Architecture services are active.")
