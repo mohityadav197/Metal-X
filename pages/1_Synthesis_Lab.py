@@ -43,7 +43,7 @@ if execute:
                     "Value": [float(v) for v in features],
                 }
             )
-            st.dataframe(table_df, use_container_width=True, hide_index=True)
+            st.dataframe(table_df, width='stretch', hide_index=True)
         else:
             st.info("No feature vector returned by backend.")
 

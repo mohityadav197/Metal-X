@@ -37,15 +37,15 @@ def check_rag_model_import() -> tuple[bool, str]:
 
 
 def check_frontend_timeout_contract() -> tuple[bool, str]:
-    file_path = Path("Main_App.py")
+    file_path = Path("Home.py")
     if not file_path.exists():
-        return False, "Main_App.py not found"
+        return False, "Home.py not found"
 
     content = file_path.read_text(encoding="utf-8")
-    expected_call = 'get_json("/system/intelligence", timeout=1.0)'
+    expected_call = 'get_json("/system/intelligence", timeout=5.0)'
     if expected_call in content:
-        return True, "Frontend timeout contract OK (1.0s in Main_App.py)"
-    return False, "Frontend timeout contract missing expected 1.0s get_json call"
+        return True, "Frontend timeout contract OK (5.0s in Home.py)"
+    return False, "Frontend timeout contract missing expected 5.0s get_json call"
 
 
 def main() -> int:

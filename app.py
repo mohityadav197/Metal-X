@@ -71,7 +71,7 @@ if gen:
         m4.metric("AVG MG %", f"{results['mg'].mean():.2f}%")
 
         st.subheader("Candidate Physics Report")
-        st.dataframe(results[['mg', 'si', 'temperature', 'time', 'yield_strength', 'status']], use_container_width=True)
+        st.dataframe(results[['mg', 'si', 'temperature', 'time', 'yield_strength', 'status']], width='stretch')
         
         st.subheader("Inverse Design Path Analysis")
         fig = px.parallel_coordinates(
@@ -92,6 +92,6 @@ if gen:
         fig.update_layout(
             margin=dict(l=80, r=40, t=30, b=30)
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 st.markdown("<br><hr><p style='text-align:center; color:#4b5c69;'>Mohit - Mid-Sem 2026</p>", unsafe_allow_html=True)
