@@ -198,3 +198,20 @@ st.markdown(
 """,
 	unsafe_allow_html=True,
 )
+
+st.sidebar.divider()
+st.sidebar.markdown("### 📬 Get in Touch")
+st.sidebar.markdown("Queries and feedback are welcome!")
+st.sidebar.markdown("[**📧 Click here to email me**](mailto:mohitkhairwal2005@gmail.com)")
+
+with st.expander("⚙️ Core Tech Stack & System Flow"):
+	st.markdown(
+		"""
+- **Frontend**: Streamlit (User interface & multipart data handling)
+- **Backend Engine**: FastAPI (Orchestration & API endpoints)
+- **Knowledge Base (RAG)**: ChromaDB (800/100 chunking with Semantic Distance Filtering)
+- **Generative Synthesis**: Groq API powered by llama-3.1-8b-instant for high-speed, physics-aware reasoning.
+		"""
+	)
+	st.info("Usage Disclaimer: This is a limited-access prototype subject to Groq API rate limits and local compute constraints.")
+

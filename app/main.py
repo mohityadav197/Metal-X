@@ -22,7 +22,7 @@ import chromadb
 import fitz
 import psutil
 from chromadb.config import Settings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from fastapi import FastAPI, File, Request, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from groq import Groq
