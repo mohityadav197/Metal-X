@@ -1,0 +1,8 @@
+.git
+metalX-venv
+__pycache__
+data/chroma_db
+chroma_db
+.env
+*.sqlite3
+**/*.sqlite3

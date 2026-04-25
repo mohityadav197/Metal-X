@@ -25,6 +25,7 @@ def _init_home_session_state() -> None:
 		"pulse_ok": False,
 		"pulse_err": None,
 		"home_last_backend_payload": {},
+		"document_embedded": False,
 	}
 	for key, value in defaults.items():
 		if key not in st.session_state:
@@ -141,6 +142,62 @@ st.markdown(
 """,
 	unsafe_allow_html=True,
 )
+
+st.markdown("### Data Intake")
+
+st.sidebar.markdown("### Data Intake")
+with st.sidebar.container():
+	uploaded_files = st.file_uploader(
+		"Upload Alloy Specs & Papers (PDF)", 
+		type=["pdf"], 
+		accept_multiple_files=True
+	)
+	if st.sidebar.button("Process Research Paper"):
+		if not uploaded_files:
+			st.sidebar.warning("Please select at least one PDF.")
+		else:
+			import requests
+			# Format file payload matching FastAPI expecting List[UploadFile] named 'files'
+			files_payload = [
+				("files", (file.name, file.getvalue(), "application/pdf")) 
+				for file in uploaded_files
+			]
+			with st.sidebar.spinner("Embedding document into ChromaDB..."):
+				try:
+					response = requests.post(
+						"http://127.0.0.1:8000/upload", 
+						files=files_payload,
+						timeout=60
+					)
+					if response.status_code == 200:
+						st.sidebar.success("Indexing successful!")
+						st.sidebar.json(response.json())
+						st.session_state.document_embedded = True
+					else:
+						st.sidebar.error(f"Error {response.status_code}: {response.text}")
+				except Exception as e:
+					st.sidebar.error(f"Transmission failed: {str(e)}")
+
+# Check document state for the main chat UI area
+if not st.session_state.document_embedded:
+	st.warning("Please upload and process a research document in the sidebar to begin.")
+else:
+	st.success("Document embedded! You can now issue queries to the Research Endpoint.")
+	query = st.chat_input("Ask the intelligence endpoint...")
+	if query:
+		with st.spinner("Querying specific knowledge base..."):
+			ok, data, err = post_json(
+				"/research",
+				{"query": query, "top_k": 5},
+				timeout=10.0,
+			)
+			if ok:
+				st.markdown(f"**Query**: {query}")
+				st.write(data.get("answer", data.get("response", "No answer provided.")))
+				if "citations" in data:
+					st.caption(f"Citations: {', '.join(data['citations'])}")
+			else:
+				st.error(f"Failed to fetch. Reason: {err}")
 
 st.markdown("### Quick Start")
 col_left, col_right = st.columns([1.1, 1.0])

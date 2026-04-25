@@ -1,28 +1,26 @@
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# System-level build/runtime tools required by Python packages.
+# Install minimal required system build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
+    build-essential \
+    libgomp1 \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip && pip install -r /app/requirements.txt
+COPY requirements.txt .
 
-COPY . /app
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-RUN chmod +x /app/start.sh
+COPY . .
 
-# Railway exposes Streamlit externally; FastAPI remains internal.
-EXPOSE 8501 8000
+RUN chmod +x start.sh
 
-# Persist ChromaDB and dataset artifacts.
-VOLUME ["/app/data"]
+EXPOSE 8501
 
-CMD ["/app/start.sh"]
+CMD ["./start.sh"]

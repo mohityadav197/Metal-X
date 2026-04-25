@@ -1,6 +1,10 @@
 import os
 import logging
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Disable ChromaDB anonymized telemetry before Chroma imports initialize.
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 load_dotenv()
@@ -64,13 +68,21 @@ app = FastAPI(
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 APP_ROOT = os.path.abspath(os.environ.get("APP_ROOT", str(PROJECT_ROOT)))
+
+DATA_RAW_DIR = os.path.abspath(os.path.join(APP_ROOT, "data", "raw"))
 CHROMA_DIR = os.path.abspath(
-    os.environ.get("CHROMA_DB_PATH", os.path.join(os.getcwd(), "data", "chroma_db"))
+    os.environ.get("CHROMA_DB_PATH", os.path.join(APP_ROOT, "data", "chroma_db"))
 )
-CHROMA_COLLECTION_NAME = "alloy_research"
 MODEL_DIR = os.path.abspath(
-    os.environ.get("MODEL_DIR", os.path.join(os.getcwd(), "app", "models"))
+    os.environ.get("MODEL_DIR", os.path.join(APP_ROOT, "app", "models"))
 )
+
+# Explicitly create required data directories
+os.makedirs(DATA_RAW_DIR, exist_ok=True)
+os.makedirs(CHROMA_DIR, exist_ok=True)
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+CHROMA_COLLECTION_NAME = "alloy_research"
 INDEX_WARN_SECONDS = float(os.environ.get("RESEARCH_INDEX_WARN_SECONDS", "45"))
 DEFAULT_MODEL = "llama-3.1-8b-instant"
 RESEARCH_MAX_DISTANCE = float(os.environ.get("RESEARCH_MAX_DISTANCE", "1.0"))
@@ -260,7 +272,15 @@ async def _index_uploaded_files(uploaded_files: List[UploadFile]) -> dict[str, A
         started = time.perf_counter()
         try:
             pdf_bytes = await up.read()
+            
+            # Save file to persistent raw data directory
+            file_path = os.path.join(DATA_RAW_DIR, up.filename)
+            with open(file_path, "wb") as f:
+                f.write(pdf_bytes)
+            logger.info(f"File successfully saved to {file_path}")
+
             chunks_added = _index_pdf_document(up.filename, pdf_bytes)
+            logger.info(f"ChromaDB successfully indexed {chunks_added} chunks for document: {up.filename}")
             elapsed = time.perf_counter() - started
             print(
                 f"Indexed {chunks_added} chunk(s) from {up.filename} in {elapsed:.2f}s",
@@ -612,6 +632,10 @@ def system_intelligence_post(payload: IntelligenceProbe) -> dict[str, Any]:
     response["tokens_out"] = 0
     return response
 
+
+@app.post("/upload")
+async def upload_endpoint(files: List[UploadFile] = File(...)) -> dict[str, Any]:
+    return await _index_uploaded_files(files)
 
 @app.post("/research/index")
 async def index_docs(files: List[UploadFile] = File(...)) -> dict[str, Any]:
