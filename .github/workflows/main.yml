@@ -36,7 +36,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: mohitkhairwal/metalx-app
+          images: mohitkhairwal2005/metalx
           tags: |
             type=raw,value=latest
             type=sha
@@ -48,3 +48,19 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: [build-and-push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to AWS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker pull mohitkhairwal2005/metalx:latest
+            sudo docker stop metalx-app || true
+            sudo docker rm metalx-app || true
+            sudo docker run -d --name metalx-app --restart unless-stopped -p 8501:8501 mohitkhairwal2005/metalx:latest

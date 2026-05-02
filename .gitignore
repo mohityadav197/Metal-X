@@ -7,14 +7,25 @@ __pycache__/
 .vscode/*.log
 .idea/
 
+# Claude local worktrees
+.claude/worktrees/
+
 # Local backups and generated artifacts
 snapshots/
 
-# Model artifacts: ignore globally, include deploy-required weights/scalers.
-**/*.pth
-**/*.pkl
-!models/*.pth
-!models/*.pkl
+# Runtime vector-store state
+/data/chroma_db/
+/chroma_db/
+
+# Uploaded research papers persisted locally
+/data/raw/*.pdf
+
+# Training byproducts; keep production model assets tracked
+/models/*_candidate_*.pth
+/models/*_candidate_*.pkl
+/models/training_metrics_*.csv
+/models/training_plot_*.png
+/models/backups/
 
 # OS
 Thumbs.db
