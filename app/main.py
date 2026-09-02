@@ -84,7 +84,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 CHROMA_COLLECTION_NAME = "alloy_research"
 INDEX_WARN_SECONDS = float(os.environ.get("RESEARCH_INDEX_WARN_SECONDS", "45"))
-DEFAULT_MODEL = "llama-3.1-8b-instant"
+DEFAULT_MODEL = "llama-3.3-70b-versatile"
 RESEARCH_MAX_DISTANCE = float(os.environ.get("RESEARCH_MAX_DISTANCE", "1.0"))
 
 SENTENCE_ENCODER: SentenceTransformer | None = None
