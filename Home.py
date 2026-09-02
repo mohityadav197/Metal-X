@@ -267,7 +267,7 @@ with st.expander("⚙️ Core Tech Stack & System Flow"):
 - **Frontend**: Streamlit (User interface & multipart data handling)
 - **Backend Engine**: FastAPI (Orchestration & API endpoints)
 - **Knowledge Base (RAG)**: ChromaDB (800/100 chunking with Semantic Distance Filtering)
-- **Generative Synthesis**: Groq API powered by llama-3.3-70b-versatile for high-speed, physics-aware reasoning.
+- **Generative Synthesis**: Groq API powered by openai/gpt-oss-120b for high-speed, physics-aware reasoning.
 		"""
 	)
 	st.info("Usage Disclaimer: This is a limited-access prototype subject to Groq API rate limits and local compute constraints.")
